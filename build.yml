@@ -1,0 +1,62 @@
+name: Build LSP Plugins for Windows
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            base-devel
+            git
+            curl
+            wget
+            tar
+            gzip
+            php
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-pkgconf
+
+      - name: Download LSP Plugins source
+        run: |
+          curl -L -o lsp-plugins-src-1.2.33.tar.gz https://github.com/lsp-plugins/lsp-plugins/releases/download/1.2.33/lsp-plugins-src-1.2.33.tar.gz
+
+      - name: Extract source
+        run: |
+          tar -xzf lsp-plugins-src-1.2.33.tar.gz
+          ls -la
+
+      - name: Configure build
+        working-directory: lsp-plugins
+        run: |
+          make clean
+          make config FEATURES="vst3 clap ui"
+
+      - name: Build plugins
+        working-directory: lsp-plugins
+        run: |
+          make -j2
+
+      - name: Install into package folder
+        working-directory: lsp-plugins
+        run: |
+          make install
+          find INSTALL -maxdepth 5 -type f | sort
+
+      - name: Upload Windows plugins
+        uses: actions/upload-artifact@v4
+        with:
+          name: lsp-plugins-1.2.33-windows-x64
+          path: lsp-plugins/INSTALL
+          if-no-files-found: error
