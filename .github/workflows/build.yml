@@ -17,14 +17,13 @@ jobs:
         with:
           msystem: MINGW64
           update: true
-          install: >-
+                    install: >-
             base-devel
             git
             curl
             wget
             tar
             gzip
-            php
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-pkgconf
 
